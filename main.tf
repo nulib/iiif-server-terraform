@@ -9,8 +9,9 @@ provider "aws" {
 }
 
 locals {
-  namespace     = module.core.outputs.stack.namespace
-  tags          = merge(module.core.outputs.stack.tags, {Component = "IIIF"})
+  application_id = "arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif"
+  namespace      = module.core.outputs.stack.namespace
+  tags           = merge(module.core.outputs.stack.tags, {Component = "IIIF"})
 }
 
 module "core" {
@@ -88,9 +89,16 @@ data "aws_acm_certificate" "wildcard" {
   statuses = ["ISSUED"]
 }
 
-resource "aws_serverlessapplicationrepository_cloudformation_stack" "serverless_iiif" {
+data "external" "template_file" {
+  program = ["${path.module}/scripts/prepare_template.js"]
+  query = {
+    applicationId = local.application_id
+  }
+}
+
+resource "aws_cloudformation_stack" "serverless_iiif" {
   name           = "${local.namespace}-serverless-iiif"
-  application_id = "arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif"
+  template_body  = data.external.template_file.result.template
   parameters = {
     SourceBucket          = aws_s3_bucket.pyramid_tiff_bucket.id
     CacheDomainName       = "${var.hostname}.${module.core.outputs.vpc.public_dns_zone.name}"
@@ -98,12 +106,12 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "serverless_
     PreflightFunctionARN  = aws_lambda_function.iiif_preflight.qualified_arn
     PreflightFunctionType = "Lambda@Edge"
   }
-  capabilities    = ["CAPABILITY_IAM", "CAPABILITY_RESOURCE_POLICY"]
+  capabilities    = ["CAPABILITY_IAM", "CAPABILITY_AUTO_EXPAND"]
   tags            = local.tags
 }
 
 data "aws_cloudfront_distribution" "serverless_iiif" {
-  id = aws_serverlessapplicationrepository_cloudformation_stack.serverless_iiif.outputs.DistributionId
+  id = aws_cloudformation_stack.serverless_iiif.outputs.DistributionId
 }
 
 resource "aws_route53_record" "serverless_iiif" {

@@ -65,6 +65,7 @@ resource "template_dir" "function_source" {
   vars = {
     allow_from       = var.allow_from_referers
     api_token_secret = var.api_token_secret
+    auth_domain      = module.core.outputs.vpc.public_dns_zone.name
     elastic_search   = module.data_services.outputs.elasticsearch.endpoint
     tiff_bucket      = aws_s3_bucket.pyramid_tiff_bucket.id
   }
