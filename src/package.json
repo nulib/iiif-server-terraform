@@ -1,5 +1,5 @@
 {
-  "name": "iiif-preflight-lambda",
+  "name": "iiif-trigger-lambda",
   "version": "1.0.0",
   "description": "IIIF Server Preflight Function",
   "main": "index.js",

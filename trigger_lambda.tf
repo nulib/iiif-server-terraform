@@ -1,5 +1,5 @@
-resource "aws_cloudwatch_log_group" "preflight_lambda_logs" {
-  name = "/aws/lambda/${local.namespace}-serverless-iiif-preflight"
+resource "aws_cloudwatch_log_group" "trigger_lambda_logs" {
+  name = "/aws/lambda/${local.namespace}-serverless-iiif-trigger"
 }
 
 data "aws_iam_policy_document" "lambda_assume_role" {
@@ -71,16 +71,16 @@ resource "template_dir" "function_source" {
   }
 }
 
-data "archive_file" "preflight_lambda" {
+data "archive_file" "trigger_lambda" {
   depends_on    = [null_resource.node_modules]
   type          = "zip"
   source_dir    = template_dir.function_source.destination_dir
   output_path   = "${path.module}/package/${local.source_sha}.zip"
 }
 
-resource "aws_lambda_function" "iiif_preflight" {
-  filename      = data.archive_file.preflight_lambda.output_path
-  function_name = "${local.namespace}-serverless-iiif-preflight"
+resource "aws_lambda_function" "iiif_trigger" {
+  filename      = data.archive_file.trigger_lambda.output_path
+  function_name = "${local.namespace}-serverless-iiif-trigger"
   role          = aws_iam_role.lambda_role.arn
   handler       = "index.handler"
   runtime       = "nodejs14.x"
@@ -91,8 +91,8 @@ resource "aws_lambda_function" "iiif_preflight" {
 
 resource "aws_lambda_permission" "allow_edge_invocation" {
   action          = "lambda:InvokeFunction"
-  function_name   = aws_lambda_function.iiif_preflight.arn
-  qualifier       = aws_lambda_function.iiif_preflight.version
+  function_name   = aws_lambda_function.iiif_trigger.arn
+  qualifier       = aws_lambda_function.iiif_trigger.version
   principal       = "cloudfront.amazonaws.com"
   source_arn      = data.aws_cloudfront_distribution.serverless_iiif.arn
 

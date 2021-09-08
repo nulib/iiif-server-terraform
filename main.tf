@@ -100,11 +100,13 @@ resource "aws_cloudformation_stack" "serverless_iiif" {
   name           = "${local.namespace}-serverless-iiif"
   template_body  = data.external.template_file.result.template
   parameters = {
-    SourceBucket          = aws_s3_bucket.pyramid_tiff_bucket.id
-    CacheDomainName       = "${var.hostname}.${module.core.outputs.vpc.public_dns_zone.name}"
-    CacheSSLCertificate   = data.aws_acm_certificate.wildcard.arn
-    PreflightFunctionARN  = aws_lambda_function.iiif_preflight.qualified_arn
-    PreflightFunctionType = "Lambda@Edge"
+    SourceBucket                = aws_s3_bucket.pyramid_tiff_bucket.id
+    CacheDomainName             = "${var.hostname}.${module.core.outputs.vpc.public_dns_zone.name}"
+    CacheSSLCertificate         = data.aws_acm_certificate.wildcard.arn
+    ViewerRequestARN    = aws_lambda_function.iiif_trigger.qualified_arn
+    ViewerRequestType   = "Lambda@Edge"
+    ViewerResponseARN   = aws_lambda_function.iiif_trigger.qualified_arn
+    ViewerResponseType  = "Lambda@Edge"
   }
   capabilities    = ["CAPABILITY_IAM", "CAPABILITY_AUTO_EXPAND"]
   tags            = local.tags
@@ -112,6 +114,15 @@ resource "aws_cloudformation_stack" "serverless_iiif" {
 
 data "aws_cloudfront_distribution" "serverless_iiif" {
   id = aws_cloudformation_stack.serverless_iiif.outputs.DistributionId
+}
+
+data "aws_lambda_function" "serverless_iiif" {
+  function_name = aws_cloudformation_stack.serverless_iiif.outputs.LambdaFunction
+}
+
+resource "aws_iam_role_policy_attachment" "serverless_iiif_pyramid_access" {
+  role          = element(split("/", data.aws_lambda_function.serverless_iiif.role), 1)
+  policy_arn    = aws_iam_policy.pyramid_bucket_access.arn
 }
 
 resource "aws_route53_record" "serverless_iiif" {

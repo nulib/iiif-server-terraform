@@ -36,7 +36,26 @@ function getAuthToken(request) {
   return getBearerToken(request) || getCookieToken(request);
 }
 
-function login(request) {
+function addAccessControlHeaders(request, response) {
+  const origin = getEventHeader(request, 'origin') || '*';
+  response.headers['access-control-allow-origin'] = [{ key: 'Access-Control-Allow-Origin', value: origin }];
+  response.headers['access-control-allow-headers'] = [{ key: 'Access-Control-Allow-Headers', value: 'authorization, cookie' }];
+  response.headers['access-control-allow-credentials'] = [{ key: 'Access-Control-Allow-Credentials', value: 'true' }];
+  return response;
+}
+
+function viewerRequestOptions(request) {
+  const response = {
+    status: '200',
+    statusDescription: 'OK',
+    headers: {},
+    body: 'OK'
+  };
+
+  return addAccessControlHeaders(request, response);
+}
+
+function viewerRequestLogin(request) {
   const authToken = getAuthToken(request);
   const headers = {};
   if (authToken !== getCookieToken(request)) {
@@ -60,15 +79,8 @@ function login(request) {
   };
 }
 
-async function processRequest(event, _context, callback) {
-  const request = event.Records[0].cf.request;
+async function viewerRequestIiif(request) {
   const path = decodeURI(request.uri.replace(/%2f/gi, ''));
-
-  // Intercept login request and return new Set-Cookie response
-  if (path === '/iiif/login') {
-    return callback(null, login(request));
-  }
-
   const authToken = getAuthToken(request);
   const [poster, id] = path.match(/^\/iiif\/2\/(posters\/)?([^/]+)/).slice(-2);
   const referer = getEventHeader(request, 'referer');
@@ -82,14 +94,51 @@ async function processRequest(event, _context, callback) {
       statusDescription: 'Forbidden',
       body: 'Forbidden'
     };
-    return callback(null, response);
+    return response;
   }
 
   // Set the x-preflight-location request header to the location of the requested item
   const pairtree = id.match(/.{1,2}/g).join('/');
   const s3Location = poster ? `s3://$${tiffBucket}/posters/$${pairtree}-poster.tif` : `s3://$${tiffBucket}/$${pairtree}-pyramid.tif`;
   request.headers['x-preflight-location'] = [{ key: 'X-Preflight-Location', value: s3Location }];
-  return callback(null, request);
+  return request;
+}
+
+async function processViewerRequest(event) {
+  const { request } = event.Records[0].cf;
+  let result;
+
+  if (request.method === 'OPTIONS') {
+    // Intercept OPTIONS request and return proper response
+    result = viewerRequestOptions(request);
+  } else if (request.uri === '/iiif/login') {
+    // Intercept login request and return new Set-Cookie response
+    result = viewerRequestLogin(request);
+  } else {
+    result = await viewerRequestIiif(request);
+  }
+
+  return result;
+}
+
+async function processViewerResponse(event) {
+  const { request, response } = event.Records[0].cf;
+  return addAccessControlHeaders(request, response);
+}
+
+async function processRequest(event, _context, callback) {
+  const { eventType } = event.Records[0].cf.config;
+  let result;
+
+  if (eventType === 'viewer-request') {
+    result = await processViewerRequest(event);
+  } else if (eventType === 'viewer-response') {
+    result = await processViewerResponse(event);
+  } else {
+    result = event.Records[0].cf.request;
+  }
+
+  return callback(null, result);
 }
 
 module.exports = { handler: processRequest };
