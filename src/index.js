@@ -105,6 +105,7 @@ async function viewerRequestIiif(request) {
 }
 
 async function processViewerRequest(event) {
+  console.log('Initiating viewer-request trigger')
   const { request } = event.Records[0].cf;
   let result;
 
@@ -122,6 +123,7 @@ async function processViewerRequest(event) {
 }
 
 async function processViewerResponse(event) {
+  console.log('Initiating viewer-response trigger')
   const { request, response } = event.Records[0].cf;
   return addAccessControlHeaders(request, response);
 }
@@ -130,6 +132,7 @@ async function processRequest(event, _context, callback) {
   const { eventType } = event.Records[0].cf.config;
   let result;
 
+  console.log('Event Type:', eventType);
   if (eventType === 'viewer-request') {
     result = await processViewerRequest(event);
   } else if (eventType === 'viewer-response') {
