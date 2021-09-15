@@ -1,3 +1,5 @@
+![terraform style](https://github.com/nulib/iiif-server-terraform/actions/workflows/tflint.yml/badge.svg)
+
 ## Description
 
 This terraform project includes the resources required to install and configure the IIIF Server.

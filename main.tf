@@ -11,7 +11,14 @@ provider "aws" {
 locals {
   application_id = "arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif"
   namespace      = module.core.outputs.stack.namespace
-  tags           = merge(module.core.outputs.stack.tags, {Component = "IIIF"})
+  tags           = merge(
+    module.core.outputs.stack.tags,
+    {
+      Component = "IIIF"
+      Git       = "github.com/nulib/iiif-server-terraform"
+      Project   = "Infrastructure"
+    }
+  )
 }
 
 module "core" {

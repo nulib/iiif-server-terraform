@@ -1,5 +1,6 @@
 resource "aws_cloudwatch_log_group" "trigger_lambda_logs" {
   name = "/aws/lambda/${local.namespace}-serverless-iiif-trigger"
+  tags = local.tags
 }
 
 data "aws_iam_policy_document" "lambda_assume_role" {
@@ -87,6 +88,7 @@ resource "aws_lambda_function" "iiif_trigger" {
   memory_size   = 128
   timeout       = 5
   publish       = true
+  tags          = local.tags
 }
 
 resource "aws_lambda_permission" "allow_edge_invocation" {
