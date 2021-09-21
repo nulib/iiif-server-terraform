@@ -31,7 +31,6 @@ data "terraform_remote_state" "iiif" {
   config {
     bucket = var.state_bucket
     key    = "env:/${terraform.workspace}/iiif.tfstate"
-    region = var.aws_region
   }
 }
 ```

@@ -4,9 +4,7 @@ terraform {
   }
 }
 
-provider "aws" {
-  region = var.aws_region
-}
+provider "aws" { }
 
 locals {
   application_id = "arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif"
@@ -108,7 +106,7 @@ resource "aws_cloudformation_stack" "serverless_iiif" {
   template_body  = data.external.template_file.result.template
   parameters = {
     SourceBucket                = aws_s3_bucket.pyramid_tiff_bucket.id
-    CacheDomainName             = "${var.hostname}.${module.core.outputs.vpc.public_dns_zone.name}"
+    CacheDomainName             = "${local.secrets.hostname}.${module.core.outputs.vpc.public_dns_zone.name}"
     CacheSSLCertificate         = data.aws_acm_certificate.wildcard.arn
     ViewerRequestARN    = aws_lambda_function.iiif_trigger.qualified_arn
     ViewerRequestType   = "Lambda@Edge"
@@ -134,7 +132,7 @@ resource "aws_iam_role_policy_attachment" "serverless_iiif_pyramid_access" {
 
 resource "aws_route53_record" "serverless_iiif" {
   zone_id = module.core.outputs.vpc.public_dns_zone.id
-  name    = "${var.hostname}.${module.core.outputs.vpc.public_dns_zone.name}"
+  name    = "${local.secrets.hostname}.${module.core.outputs.vpc.public_dns_zone.name}"
   type    = "A"
 
   alias {
