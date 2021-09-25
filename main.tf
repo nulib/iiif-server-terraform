@@ -90,7 +90,7 @@ resource "aws_iam_policy" "pyramid_bucket_access" {
 }
 
 data "aws_acm_certificate" "wildcard" {
-  domain   = "*.${module.core.outputs.vpc.public_dns_zone.name}"
+  domain   = local.secrets.certificate_domain
   statuses = ["ISSUED"]
 }
 
