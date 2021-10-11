@@ -6,8 +6,8 @@ This terraform project includes the resources required to install and configure 
 
 ## Prerequisites
 
-* [core](../core/README.md)
-* [data_services](../data_services/README.md)
+* [core](https://github.com/nulib/infrastructure/blob/main/core/README.md)
+* [data_services](https://github.com/nulib/infrastructure/blob/main/data_services/README.md)
 
 ## Variables
 
