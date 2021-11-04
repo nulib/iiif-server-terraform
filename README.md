@@ -9,6 +9,12 @@ This terraform project includes the resources required to install and configure 
 * [core](https://github.com/nulib/infrastructure/blob/main/core/README.md)
 * [data_services](https://github.com/nulib/infrastructure/blob/main/data_services/README.md)
 
+## Setup
+
+```
+cd scripts && npm install && cd -
+```
+
 ## Variables
 
 * `allow_from_referers` - A regular expression to match against the Referer header for pass-through authorization
