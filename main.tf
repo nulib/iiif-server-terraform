@@ -108,6 +108,7 @@ resource "aws_cloudformation_stack" "serverless_iiif" {
     SourceBucket          = aws_s3_bucket.pyramid_tiff_bucket.id
     CacheDomainName       = "${local.secrets.hostname}.${module.core.outputs.vpc.public_dns_zone.name}"
     CacheSSLCertificate   = data.aws_acm_certificate.wildcard.arn
+    IiifLambdaMemory      = 2048
     PixelDensity          = 600
     ViewerRequestARN      = aws_lambda_function.iiif_trigger.qualified_arn
     ViewerRequestType     = "Lambda@Edge"
