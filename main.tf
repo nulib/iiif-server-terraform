@@ -1,15 +1,15 @@
 terraform {
   backend "s3" {
-    key    = "iiif.tfstate"
+    key = "iiif.tfstate"
   }
 }
 
-provider "aws" { }
+provider "aws" {}
 
 locals {
   application_id = "arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif"
   namespace      = module.core.outputs.stack.namespace
-  tags           = merge(
+  tags = merge(
     module.core.outputs.stack.tags,
     {
       Component = "IIIF"
@@ -44,6 +44,18 @@ resource "aws_s3_bucket" "pyramid_tiff_bucket" {
     ]
     max_age_seconds = 3000
   }
+
+  lifecycle_rule {
+    id      = "intelligent-tiering"
+    enabled = true
+
+    prefix = ""
+
+    transition {
+      days          = 0
+      storage_class = "INTELLIGENT_TIERING"
+    }
+  }
 }
 
 data "aws_iam_policy_document" "pyramid_bucket_access" {
@@ -69,7 +81,7 @@ data "aws_iam_policy_document" "pyramid_bucket_access" {
     resources = [aws_s3_bucket.pyramid_tiff_bucket.arn]
   }
 
- statement {
+  statement {
     effect = "Allow"
 
     actions = [
@@ -102,21 +114,21 @@ data "external" "template_file" {
 }
 
 resource "aws_cloudformation_stack" "serverless_iiif" {
-  name           = "${local.namespace}-serverless-iiif"
-  template_body  = data.external.template_file.result.template
+  name          = "${local.namespace}-serverless-iiif"
+  template_body = data.external.template_file.result.template
   parameters = {
-    SourceBucket          = aws_s3_bucket.pyramid_tiff_bucket.id
-    CacheDomainName       = "${local.secrets.hostname}.${module.core.outputs.vpc.public_dns_zone.name}"
-    CacheSSLCertificate   = data.aws_acm_certificate.wildcard.arn
-    IiifLambdaMemory      = 2048
-    PixelDensity          = 600
-    ViewerRequestARN      = aws_lambda_function.iiif_trigger.qualified_arn
-    ViewerRequestType     = "Lambda@Edge"
-    ViewerResponseARN     = aws_lambda_function.iiif_trigger.qualified_arn
-    ViewerResponseType    = "Lambda@Edge"
+    SourceBucket        = aws_s3_bucket.pyramid_tiff_bucket.id
+    CacheDomainName     = "${local.secrets.hostname}.${module.core.outputs.vpc.public_dns_zone.name}"
+    CacheSSLCertificate = data.aws_acm_certificate.wildcard.arn
+    IiifLambdaMemory    = 2048
+    PixelDensity        = 600
+    ViewerRequestARN    = aws_lambda_function.iiif_trigger.qualified_arn
+    ViewerRequestType   = "Lambda@Edge"
+    ViewerResponseARN   = aws_lambda_function.iiif_trigger.qualified_arn
+    ViewerResponseType  = "Lambda@Edge"
   }
-  capabilities    = ["CAPABILITY_IAM", "CAPABILITY_AUTO_EXPAND"]
-  tags            = local.tags
+  capabilities = ["CAPABILITY_IAM", "CAPABILITY_AUTO_EXPAND"]
+  tags         = local.tags
 }
 
 data "aws_cloudfront_distribution" "serverless_iiif" {
@@ -128,8 +140,8 @@ data "aws_lambda_function" "serverless_iiif" {
 }
 
 resource "aws_iam_role_policy_attachment" "serverless_iiif_pyramid_access" {
-  role          = element(split("/", data.aws_lambda_function.serverless_iiif.role), 1)
-  policy_arn    = aws_iam_policy.pyramid_bucket_access.arn
+  role       = element(split("/", data.aws_lambda_function.serverless_iiif.role), 1)
+  policy_arn = aws_iam_policy.pyramid_bucket_access.arn
 }
 
 resource "aws_route53_record" "serverless_iiif" {
@@ -138,8 +150,8 @@ resource "aws_route53_record" "serverless_iiif" {
   type    = "A"
 
   alias {
-    name                      = data.aws_cloudfront_distribution.serverless_iiif.domain_name
-    zone_id                   = data.aws_cloudfront_distribution.serverless_iiif.hosted_zone_id
-    evaluate_target_health    = true
+    name                   = data.aws_cloudfront_distribution.serverless_iiif.domain_name
+    zone_id                = data.aws_cloudfront_distribution.serverless_iiif.hosted_zone_id
+    evaluate_target_health = true
   }
 }
