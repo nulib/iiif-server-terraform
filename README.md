@@ -19,7 +19,7 @@ cd scripts && npm install && cd -
 
 * `allow_from_referers` - A regular expression to match against the Referer header for pass-through authorization
 * `api_token_secret` - The secret used to encrypt/decrypt JavaScript Web Tokens
-* `aws_region` - The region to create resources in (default: `us-east-1`)
+* `certificate_domain` - The domain name linked to the SSL certificate to be used
 * `hostname` - The hostname of the IIIF server within the public DNS zone
 
 ## Outputs
