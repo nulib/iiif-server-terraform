@@ -16,3 +16,8 @@ variable "hostname" {
   type    = string
   default = "serverless-iiif"
 }
+
+variable "reading_room_ips" {
+  type    = string
+  default = ""
+}

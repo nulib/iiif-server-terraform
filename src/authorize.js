@@ -7,6 +7,7 @@ const AWS      = require('aws-sdk');
 const apiTokenSecret = '${api_token_secret}';
 const elasticSearch  = '${elastic_search}';
 const allowedFrom    = allowedFromRegexes('${allow_from}');
+const readingRoomIps = '${reading_room_ips}'.split(/\s*,\s*/);
 
 function allowedFromRegexes(str) {
   var configValues = isString(str) ? str.split(';') : [];
@@ -72,7 +73,11 @@ async function makeRequest(method, requestUrl, body = null) {
   });
 }
 
-async function authorize(token, id, referer) {
+async function authorize(token, id, referer, requestIp) {
+  if (readingRoomIps.includes(requestIp)) {
+    return true;
+  }
+
   for (var re in allowedFrom) {
     if (allowedFrom[re].test(referer)) return true;
   }

@@ -84,7 +84,8 @@ async function viewerRequestIiif(request) {
   const authToken = getAuthToken(request);
   const [poster, id] = path.match(/^\/iiif\/2\/(posters\/)?([^/]+)/).slice(-2);
   const referer = getEventHeader(request, 'referer');
-  const authed = await authorize(authToken, id, referer);
+  const requestIp = request.clientIp;
+  const authed = await authorize(authToken, id, referer, requestIp);
   console.log('Authorized:', authed);
 
   // Return a 403 response if not authorized to view the requested item
