@@ -79,12 +79,34 @@ function viewerRequestLogin(request) {
   };
 }
 
+function parsePath(path) {
+  const segments = path.split(/\//);
+  const posterIndex = segments.indexOf("posters");
+  if (posterIndex > -1) segments.splice(posterIndex, 1);
+  segments.reverse();
+
+  if (segments.length == 5) {
+    return {
+      id: segments[1],
+      filename: segments[0],
+    }
+  } else {
+    return {
+      id: segments[4],
+      region: segments[3],
+      size: segments[2],
+      rotation: segments[1],
+      filename: segments[0],
+    }
+  }
+}
+
 async function viewerRequestIiif(request) {
   const path = decodeURI(request.uri.replace(/%2f/gi, ''));
   const authToken = getAuthToken(request);
-  const [poster, id] = path.match(/^\/iiif\/2\/(posters\/)?([^/]+)/).slice(-2);
+  const params = parsePath(path);
   const referer = getEventHeader(request, 'referer');
-  const authed = await authorize(authToken, id, referer);
+  const authed = await authorize(authToken, params, referer);
   console.log('Authorized:', authed);
 
   // Return a 403 response if not authorized to view the requested item

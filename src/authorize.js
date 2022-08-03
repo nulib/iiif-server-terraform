@@ -72,12 +72,28 @@ async function makeRequest(method, requestUrl, body = null) {
   });
 }
 
-async function authorize(token, id, referer) {
+function isBlurred({region, size}) {
+  if (region !== "full") return false;           // not a full frame request
+  if (typeof size !== "string") return false;    // size parameter not specified
+
+  const match = size.match(/!(\d+)?,(\d+)?/);
+  if (match === null) return false;              // constrained height and width not specified
+  const width = Number(match[1]);
+  const height = Number(match[2]);
+  if (width <= 5 || height <= 5) return true;    // image constrained to <=5px in its largest dimension
+
+  return false;
+}
+
+async function authorize(token, params, referer) {
+  if (params.filename == "info.json") return true;
+  if (isBlurred(params)) return true;
+
   for (var re in allowedFrom) {
     if (allowedFrom[re].test(referer)) return true;
   }
 
-  id = id.split("/").slice(-1)[0]
+  const id = params.id.split("/").slice(-1)[0];
 
   const currentUser = getCurrentUser(token);
   const doc = await getDoc(id);
