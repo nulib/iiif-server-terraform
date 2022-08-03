@@ -119,7 +119,7 @@ async function viewerRequestIiif(request) {
   }
 
   // Set the x-preflight-location request header to the location of the requested item
-  const pairtree = id.match(/.{1,2}/g).join('/');
+  const pairtree = params.id.match(/.{1,2}/g).join('/');
   const s3Location = params.poster ? `s3://$${tiffBucket}/posters/$${pairtree}-poster.tif` : `s3://$${tiffBucket}/$${pairtree}-pyramid.tif`;
   request.headers['x-preflight-location'] = [{ key: 'X-Preflight-Location', value: s3Location }];
   return request;
