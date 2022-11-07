@@ -79,12 +79,33 @@ function viewerRequestLogin(request) {
   };
 }
 
+function parsePath(path) {
+  const segments = path.split(/\//).reverse();
+
+  if (segments.length < 8) {
+    return {
+      poster: segments[2] == "posters",
+      id: segments[1],
+      filename: segments[0],
+    }
+  } else {
+    return {
+      poster: segments[5] == "posters",
+      id: segments[4],
+      region: segments[3],
+      size: segments[2],
+      rotation: segments[1],
+      filename: segments[0],
+    }
+  }
+}
+
 async function viewerRequestIiif(request) {
   const path = decodeURI(request.uri.replace(/%2f/gi, ''));
   const authToken = getAuthToken(request);
-  const [poster, id] = path.match(/^\/iiif\/2\/(posters\/)?([^/]+)/).slice(-2);
+  const params = parsePath(path);
   const referer = getEventHeader(request, 'referer');
-  const authed = await authorize(authToken, id, referer);
+  const authed = await authorize(authToken, params, referer);
   console.log('Authorized:', authed);
 
   // Return a 403 response if not authorized to view the requested item
@@ -98,8 +119,8 @@ async function viewerRequestIiif(request) {
   }
 
   // Set the x-preflight-location request header to the location of the requested item
-  const pairtree = id.match(/.{1,2}/g).join('/');
-  const s3Location = poster ? `s3://$${tiffBucket}/posters/$${pairtree}-poster.tif` : `s3://$${tiffBucket}/$${pairtree}-pyramid.tif`;
+  const pairtree = params.id.match(/.{1,2}/g).join('/');
+  const s3Location = params.poster ? `s3://$${tiffBucket}/posters/$${pairtree}-poster.tif` : `s3://$${tiffBucket}/$${pairtree}-pyramid.tif`;
   request.headers['x-preflight-location'] = [{ key: 'X-Preflight-Location', value: s3Location }];
   return request;
 }
