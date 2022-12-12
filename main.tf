@@ -40,7 +40,10 @@ module "data_services" {
 resource "aws_s3_bucket" "pyramid_tiff_bucket" {
   bucket = "${local.namespace}-pyramid-tiffs"
   tags   = local.tags
+}
 
+resource "aws_s3_bucket_cors_configuration" "pyramid_tiff_bucket" {
+  bucket = aws_s3_bucket.pyramid_tiff_bucket.id
   cors_rule {
     allowed_headers = ["*"]
     allowed_methods = ["GET"]
@@ -52,12 +55,16 @@ resource "aws_s3_bucket" "pyramid_tiff_bucket" {
     ]
     max_age_seconds = 3000
   }
+}
 
-  lifecycle_rule {
+resource "aws_s3_bucket_lifecycle_configuration" "pyramid_tiff_bucket" {
+  bucket = aws_s3_bucket.pyramid_tiff_bucket.id
+
+  rule {
     id      = "intelligent-tiering"
-    enabled = true
+    status  = "Enabled"
 
-    prefix = ""
+    filter {}
 
     transition {
       days          = 0

@@ -15,6 +15,7 @@ function getEventHeader(request, name) {
 
 function addAccessControlHeaders(request, response) {
   const origin = getEventHeader(request, "origin") || "*";
+  if (!response.headers) response.headers = {};
   response.headers["access-control-allow-origin"] = [
     { key: "Access-Control-Allow-Origin", value: origin },
   ];
@@ -74,7 +75,7 @@ async function viewerRequestIiif(request) {
       statusDescription: "Forbidden",
       body: "Forbidden",
     };
-    return response;
+    return addAccessControlHeaders(request, response);
   }
 
   // Set the x-preflight-location request header to the location of the requested item
