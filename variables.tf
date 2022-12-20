@@ -3,12 +3,11 @@ variable "allow_from_referers" {
   default = ""
 }
 
-variable "api_token_secret" {
+variable "certificate_domain" {
   type    = string
-  default = null
 }
 
-variable "certificate_domain" {
+variable "dc_api_endpoint" {
   type    = string
 }
 

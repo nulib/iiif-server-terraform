@@ -1,4 +1,12 @@
 terraform {
+  required_version = ">= 1.0"
+  required_providers {
+    aws         = "~> 4.0"
+    external    = "~> 2.2"
+    null        = "~> 3.1"
+    template    = "~> 2.2"
+    archive     = "~> 2.2"
+  }
   backend "s3" {
     key = "iiif.tfstate"
   }
@@ -32,7 +40,10 @@ module "data_services" {
 resource "aws_s3_bucket" "pyramid_tiff_bucket" {
   bucket = "${local.namespace}-pyramid-tiffs"
   tags   = local.tags
+}
 
+resource "aws_s3_bucket_cors_configuration" "pyramid_tiff_bucket" {
+  bucket = aws_s3_bucket.pyramid_tiff_bucket.id
   cors_rule {
     allowed_headers = ["*"]
     allowed_methods = ["GET"]
@@ -44,12 +55,16 @@ resource "aws_s3_bucket" "pyramid_tiff_bucket" {
     ]
     max_age_seconds = 3000
   }
+}
 
-  lifecycle_rule {
+resource "aws_s3_bucket_lifecycle_configuration" "pyramid_tiff_bucket" {
+  bucket = aws_s3_bucket.pyramid_tiff_bucket.id
+
+  rule {
     id      = "intelligent-tiering"
-    enabled = true
+    status  = "Enabled"
 
-    prefix = ""
+    filter {}
 
     transition {
       days          = 0

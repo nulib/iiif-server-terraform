@@ -6,8 +6,8 @@ This terraform project includes the resources required to install and configure 
 
 ## Prerequisites
 
-* [core](https://github.com/nulib/infrastructure/blob/main/core/README.md)
-* [data_services](https://github.com/nulib/infrastructure/blob/main/data_services/README.md)
+- [core](https://github.com/nulib/infrastructure/blob/main/core/README.md)
+- [data_services](https://github.com/nulib/infrastructure/blob/main/data_services/README.md)
 
 ## Setup
 
@@ -17,14 +17,15 @@ cd scripts && npm install && cd -
 
 ## Variables
 
-* `allow_from_referers` - A regular expression to match against the Referer header for pass-through authorization
-* `api_token_secret` - The secret used to encrypt/decrypt JavaScript Web Tokens
-* `certificate_domain` - The domain name linked to the SSL certificate to be used
-* `hostname` - The hostname of the IIIF server within the public DNS zone
+- `allow_from_referers` - A regular expression to match against the Referer header for pass-through authorization
+- `api_token_secret` - The secret used to encrypt/decrypt JavaScript Web Tokens
+- `certificate_domain` - The domain name linked to the SSL certificate to be used
+- `dc_api_endpoint` - The public endpoint for DC API
+- `hostname` - The hostname of the IIIF server within the public DNS zone
 
 ## Outputs
 
-* `endpoint` - The base URL of the IIIF service
+- `endpoint` - The base URL of the IIIF service
 
 ## Remote State
 
@@ -62,26 +63,26 @@ In one _very rare_ circumstance (if the upstream template adds a new parameter _
 
 1. Retrieve the parameters used to create the stack:
 
-    ```
-    $ stack_name=$(terraform output -json | jq -r '.stack_name.value')
-    $ params=$(aws cloudformation describe-stacks --stack-name serverlessrepo-$stack_name | \
-      jq -cr '[.Stacks[0].Parameters[] | { Name: .ParameterKey, Value: .ParameterValue}]')
-    ```
+   ```
+   $ stack_name=$(terraform output -json | jq -r '.stack_name.value')
+   $ params=$(aws cloudformation describe-stacks --stack-name serverlessrepo-$stack_name | \
+     jq -cr '[.Stacks[0].Parameters[] | { Name: .ParameterKey, Value: .ParameterValue}]')
+   ```
 
 2. Create a CloudFormation changeset to upgrade the stack in place:
 
-    ```
-    $ changeset_id=$(aws serverlessrepo create-cloud-formation-change-set \
-      --application-id arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif \
-      --stack-name $stack_name \
-      --capabilities CAPABILITY_IAM CAPABILITY_RESOURCE_POLICY \
-      --parameter-overrides "$params" | jq -r '.ChangeSetId')
-    ```
+   ```
+   $ changeset_id=$(aws serverlessrepo create-cloud-formation-change-set \
+     --application-id arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif \
+     --stack-name $stack_name \
+     --capabilities CAPABILITY_IAM CAPABILITY_RESOURCE_POLICY \
+     --parameter-overrides "$params" | jq -r '.ChangeSetId')
+   ```
 
 3. Apply the changeset:
-   
-    ```
-    $ aws cloudformation execute-change-set --change-set-name $changeset_id
-    ```
+
+   ```
+   $ aws cloudformation execute-change-set --change-set-name $changeset_id
+   ```
 
 The upgrade may take several minutes to complete. You can monitor the progress in the [Lambda Application Console](https://console.aws.amazon.com/lambda/home#/applications)
