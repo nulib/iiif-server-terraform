@@ -1,16 +1,12 @@
 {
   "name": "iiif-trigger-lambda",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "IIIF Server Preflight Function",
   "main": "index.js",
   "author": "Michael B. Klein",
   "license": "Apache-2.0",
   "dependencies": {
-    "cookie": "^0.3.1",
-    "jsonwebtoken": "^8.4.0",
-    "lodash.isobject": "^3.0.2",
     "lodash.isstring": "^4.0.1",
-    "node-fetch": "^2.3.0",
-    "uri-js": "^4.4.1"
+    "node-fetch": "^2.3.0"
   }
 }
