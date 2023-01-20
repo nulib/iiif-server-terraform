@@ -65,7 +65,7 @@ async function viewerRequestIiif(request) {
   const params = parsePath(path);
   const referer = getEventHeader(request, "referer");
   const cookie = getEventHeader(request, "cookie");
-  const authed = await authorize(params, referer, cookie);
+  const authed = await authorize(params, referer, cookie, request.clientIp);
   console.log("Authorized:", authed);
 
   // Return a 403 response if not authorized to view the requested item
