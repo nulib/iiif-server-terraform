@@ -26,7 +26,7 @@ function isBlurred({ region, size }) {
   return false;
 }
 
-async function authorize(params, referer, cookie) {
+async function authorize(params, referer, cookie, clientIp) {
   if (params.filename == "info.json") return true;
   if (isBlurred(params)) return true;
 
@@ -36,15 +36,16 @@ async function authorize(params, referer, cookie) {
 
   const id = params.id.split("/").slice(-1)[0];
 
-  return await getImageAuthorization(id, cookie);
+  return await getImageAuthorization(id, cookie, clientIp);
 }
 
-async function getImageAuthorization(id, cookieHeader) {
+async function getImageAuthorization(id, cookieHeader, clientIp) {
   const opts = {
     headers: {
       cookie: cookieHeader,
     },
   };
+  if (clientIp) opts.headers["x-client-ip"] = clientIp;
 
   const response = await fetch(
     `$${dcApiEndpoint}/file-sets/$${id}/authorization`,
