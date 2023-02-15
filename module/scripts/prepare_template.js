@@ -3,14 +3,19 @@ const AWS = require('aws-sdk');
 const YAML = require('yaml');
 const fetch = require('node-fetch');
 const fs = require('fs');
-const os = require('os');
 
 const SAR = new AWS.ServerlessApplicationRepository();
 
 const getApplicationTemplate = async (applicationId) => {
-  const changeSet = await SAR.createCloudFormationTemplate({ApplicationId: applicationId}).promise();
-  const response = await fetch(changeSet.TemplateUrl);
-  const body = await response.text();
+  let body;
+  const localFile = `${__dirname}/local_template.yaml`;
+  if (fs.existsSync(localFile)) {
+    body = fs.readFileSync(localFile).toString();
+  } else {
+    const changeSet = await SAR.createCloudFormationTemplate({ApplicationId: applicationId}).promise();
+    const response = await fetch(changeSet.TemplateUrl);
+    body = await response.text();
+  }
   return YAML.parse(body);
 };
 

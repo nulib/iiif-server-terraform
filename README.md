@@ -17,11 +17,11 @@ cd scripts && npm install && cd -
 
 ## Variables
 
+- `aliases` - The list of hostnames the IIIF server should respond to, with the canonical name listed first
 - `allow_from_referers` - A regular expression to match against the Referer header for pass-through authorization
 - `api_token_secret` - The secret used to encrypt/decrypt JavaScript Web Tokens
 - `certificate_domain` - The domain name linked to the SSL certificate to be used
 - `dc_api_endpoint` - The public endpoint for DC API
-- `hostname` - The hostname of the IIIF server within the public DNS zone
 
 ## Outputs
 
