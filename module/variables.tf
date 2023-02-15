@@ -15,3 +15,13 @@ variable "certificate_domain" {
 variable "dc_api_endpoint" {
   type    = string
 }
+
+variable "namespace" {
+  type    = string
+  default = ""
+}
+
+variable "tags" {
+  type    = map(string)
+  default = {}
+}
