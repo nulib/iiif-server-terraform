@@ -1,8 +1,10 @@
 #!/usr/bin/env node
+require('child_process').execSync("npm install", { cwd: __dirname });
+
+const fs = require('fs');
 const AWS = require('aws-sdk');
 const YAML = require('yaml');
 const fetch = require('node-fetch');
-const fs = require('fs');
 
 const SAR = new AWS.ServerlessApplicationRepository();
 
