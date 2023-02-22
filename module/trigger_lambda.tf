@@ -40,7 +40,7 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution_role" {
 }
 
 locals {
-  source_sha = sha1(join("", concat([sha1(var.dc_api_endpoint)], [for f in fileset("", "${path.module}/src/*"): sha1(file(f))])))
+  source_sha = sha1(join("", concat([sha1(var.dc_api_endpoint)], [for f in fileset("", "${template_dir.function_source.destination_dir}/*"): sha1(file(f))])))
 }
 
 resource "null_resource" "node_modules" {
@@ -73,15 +73,16 @@ data "archive_file" "trigger_lambda" {
 }
 
 resource "aws_lambda_function" "iiif_trigger" {
-  filename      = data.archive_file.trigger_lambda.output_path
-  function_name = "${var.namespace}-serverless-iiif-trigger"
-  role          = aws_iam_role.lambda_role.arn
-  handler       = "index.handler"
-  runtime       = "nodejs16.x"
-  memory_size   = 128
-  timeout       = 5
-  publish       = true
-  tags          = var.tags
+  filename            = data.archive_file.trigger_lambda.output_path
+  function_name       = "${var.namespace}-serverless-iiif-trigger"
+  role                = aws_iam_role.lambda_role.arn
+  handler             = "index.handler"
+  runtime             = "nodejs16.x"
+  memory_size         = 128
+  timeout             = 5
+  publish             = true
+  source_code_hash    = data.archive_file.trigger_lambda.output_sha
+  tags                = var.tags
 }
 
 resource "aws_lambda_permission" "allow_edge_invocation" {
