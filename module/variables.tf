@@ -25,3 +25,8 @@ variable "tags" {
   type    = map(string)
   default = {}
 }
+
+variable "tiff_bucket_policy" {
+  type    = string
+  default = ""
+}

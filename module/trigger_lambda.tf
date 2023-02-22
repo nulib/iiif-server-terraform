@@ -73,15 +73,16 @@ data "archive_file" "trigger_lambda" {
 }
 
 resource "aws_lambda_function" "iiif_trigger" {
-  filename      = data.archive_file.trigger_lambda.output_path
-  function_name = "${var.namespace}-serverless-iiif-trigger"
-  role          = aws_iam_role.lambda_role.arn
-  handler       = "index.handler"
-  runtime       = "nodejs16.x"
-  memory_size   = 128
-  timeout       = 5
-  publish       = true
-  tags          = var.tags
+  filename            = data.archive_file.trigger_lambda.output_path
+  function_name       = "${var.namespace}-serverless-iiif-trigger"
+  role                = aws_iam_role.lambda_role.arn
+  handler             = "index.handler"
+  runtime             = "nodejs16.x"
+  memory_size         = 128
+  timeout             = 5
+  publish             = true
+  source_code_hash    = data.archive_file.trigger_lambda.output_sha
+  tags                = var.tags
 }
 
 resource "aws_lambda_permission" "allow_edge_invocation" {
