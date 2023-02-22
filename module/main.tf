@@ -12,6 +12,7 @@ resource "aws_s3_bucket" "pyramid_tiff_bucket" {
 }
 
 resource "aws_s3_bucket_policy" "pyramid_tiff_bucket" {
+  count  = var.tiff_bucket_policy == "" ? 0 : 1
   bucket = aws_s3_bucket.pyramid_tiff_bucket.bucket
   policy = replace(var.tiff_bucket_policy, "__BUCKET_ARN__", aws_s3_bucket.pyramid_tiff_bucket.arn)
 }
