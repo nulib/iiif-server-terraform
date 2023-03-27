@@ -40,35 +40,43 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution_role" {
 }
 
 locals {
-  source_sha = sha1(join("", concat([sha1(var.dc_api_endpoint)], [for f in fileset("", "${template_dir.function_source.destination_dir}/*"): sha1(file(f))])))
+  source_sha = sha1(join("", [for f in fileset("", "${path.module}/src/*"): sha1(file(f))]))
 }
 
 resource "null_resource" "node_modules" {
+  depends_on = [
+    local_file.function_source
+  ]
+
   triggers = {
-    source = local.source_sha
+    api_endpoint    = var.dc_api_endpoint
+    node_modules    = fileexists("module/build/node_modules/.package-lock.json")
+    source          = local.source_sha
   }
 
   provisioner "local-exec" {
     command     = "npm install --no-bin-links"
-    working_dir = template_dir.function_source.destination_dir
+    working_dir = "${path.module}/build"
   }
 }
 
-resource "template_dir" "function_source" {
-  source_dir      = "${path.module}/src"
-  destination_dir = "${path.module}/build"
-
-  vars = {
-    allow_from       = var.allow_from_referers
-    dc_api_endpoint  = var.dc_api_endpoint
-    tiff_bucket      = aws_s3_bucket.pyramid_tiff_bucket.id
-  }
+resource "local_file" "function_source" {
+  for_each = toset([for f in fileset("", "${path.module}/src/*"): basename(f)])
+  filename = "${path.module}/build/${each.key}"
+  content = templatefile(
+    "${path.module}/src/${each.key}",
+    {
+      allow_from       = var.allow_from_referers
+      dc_api_endpoint  = var.dc_api_endpoint
+      tiff_bucket      = aws_s3_bucket.pyramid_tiff_bucket.id
+    }
+  )
 }
 
 data "archive_file" "trigger_lambda" {
   depends_on    = [null_resource.node_modules]
   type          = "zip"
-  source_dir    = template_dir.function_source.destination_dir
+  source_dir    = "${path.module}/build"
   output_path   = "${path.module}/package/${local.source_sha}.zip"
 }
 

@@ -3,7 +3,7 @@ data "aws_region" "current" {}
 locals {
   application_id = "arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif-cloudfront"
   host_zones     = {for host in var.aliases : host => trimprefix(host, regex("^.+?\\.", host))}
-  sharp_layer    = "arn:aws:lambda:${data.aws_region.current.name}:625046682746:layer:libvips-sharp-jp2:3"
+  sharp_layer    = replace(var.sharp_layer, "/\\$AWS_REGION/", data.aws_region.current.name)
 }
 
 resource "aws_s3_bucket" "pyramid_tiff_bucket" {
@@ -110,7 +110,8 @@ resource "aws_cloudformation_stack" "serverless_iiif" {
     SourceBucket          = aws_s3_bucket.pyramid_tiff_bucket.id
     CacheDomainName       = join(",", var.aliases)
     CacheSSLCertificate   = data.aws_acm_certificate.cache_certificate.arn
-    IiifLambdaMemory      = 2048
+    IiifLambdaMemory      = var.iiif_lambda_memory
+    IiifLambdaTimeout     = var.iiif_lambda_timeout
     PixelDensity          = 600
     SharpLayer            = local.sharp_layer
     ViewerRequestARN      = aws_lambda_function.iiif_trigger.qualified_arn
