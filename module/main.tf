@@ -110,14 +110,15 @@ resource "aws_cloudformation_stack" "serverless_iiif" {
     SourceBucket          = aws_s3_bucket.pyramid_tiff_bucket.id
     CacheDomainName       = join(",", var.aliases)
     CacheSSLCertificate   = data.aws_acm_certificate.cache_certificate.arn
+    CorsAllowCredentials  = "true"
+    CorsAllowHeaders      = "authorization, cookie"
+    CorsAllowOrigin       = "REFLECT_ORIGIN"
     IiifLambdaMemory      = var.iiif_lambda_memory
     IiifLambdaTimeout     = var.iiif_lambda_timeout
     PixelDensity          = 600
     SharpLayer            = local.sharp_layer
     ViewerRequestARN      = aws_lambda_function.iiif_trigger.qualified_arn
     ViewerRequestType     = "Lambda@Edge"
-    ViewerResponseARN     = aws_lambda_function.iiif_trigger.qualified_arn
-    ViewerResponseType    = "Lambda@Edge"
   }
   capabilities = ["CAPABILITY_IAM", "CAPABILITY_AUTO_EXPAND"]
   tags         = var.tags

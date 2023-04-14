@@ -13,30 +13,19 @@ function getEventHeader(request, name) {
   }
 }
 
-function addAccessControlHeaders(request, response) {
-  const origin = getEventHeader(request, "origin") || "*";
-  if (!response.headers) response.headers = {};
-  response.headers["access-control-allow-origin"] = [
-    { key: "Access-Control-Allow-Origin", value: origin },
-  ];
-  response.headers["access-control-allow-headers"] = [
-    { key: "Access-Control-Allow-Headers", value: "authorization, cookie" },
-  ];
-  response.headers["access-control-allow-credentials"] = [
-    { key: "Access-Control-Allow-Credentials", value: "true" },
-  ];
-  return response;
-}
-
 function viewerRequestOptions(request) {
-  const response = {
+  const origin = getEventHeader(request, "origin") || "*";
+  return {
     status: "200",
     statusDescription: "OK",
-    headers: {},
+    headers: {
+      "access-control-allow-headers": [ { key: "Access-Control-Allow-Headers", value: "authorization, cookie" } ],
+      "access-control-allow-credentials": [ { key: "Access-Control-Allow-Credentials", value: "true" } ],
+      "access-control-allow-methods": [ { key: "Access-Control-Allow-Methods", value: "GET, OPTIONS" } ],
+      "access-control-allow-origin": [ { key: "Access-Control-Allow-Origin", value: origin } ],
+    },
     body: "OK",
   };
-
-  return addAccessControlHeaders(request, response);
 }
 
 function parsePath(path) {
@@ -70,12 +59,11 @@ async function viewerRequestIiif(request) {
 
   // Return a 403 response if not authorized to view the requested item
   if (!authed) {
-    const response = {
+    return {
       status: "403",
       statusDescription: "Forbidden",
       body: "Forbidden",
     };
-    return addAccessControlHeaders(request, response);
   }
 
   // Set the x-preflight-location request header to the location of the requested item
@@ -104,12 +92,6 @@ async function processViewerRequest(event) {
   return result;
 }
 
-async function processViewerResponse(event) {
-  console.log("Initiating viewer-response trigger");
-  const { request, response } = event.Records[0].cf;
-  return addAccessControlHeaders(request, response);
-}
-
 async function processRequest(event, _context, callback) {
   const { eventType } = event.Records[0].cf.config;
   let result;
@@ -117,8 +99,6 @@ async function processRequest(event, _context, callback) {
   console.log("Event Type:", eventType);
   if (eventType === "viewer-request") {
     result = await processViewerRequest(event);
-  } else if (eventType === "viewer-response") {
-    result = await processViewerResponse(event);
   } else {
     result = event.Records[0].cf.request;
   }
