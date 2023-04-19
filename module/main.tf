@@ -103,12 +103,38 @@ data "external" "template_file" {
   }
 }
 
+resource "aws_cloudfront_cache_policy" "caching_with_variable_origin" {
+  name        = "${var.namespace}-cache-with-variable-origin"
+  comment     = "Includes Origin request header in cache key"
+  default_ttl = 86400
+  max_ttl     = 31536000
+  min_ttl     = 1
+  parameters_in_cache_key_and_forwarded_to_origin {
+    cookies_config {
+      cookie_behavior = "none"
+    }
+    headers_config {
+      header_behavior = "whitelist"
+      headers {
+        items = ["Origin"]
+      }
+    }
+    query_strings_config {
+      query_string_behavior = "none"
+    }
+
+    enable_accept_encoding_brotli = false
+    enable_accept_encoding_gzip = false
+  }
+}
+
 resource "aws_cloudformation_stack" "serverless_iiif" {
   name          = "${var.namespace}-serverless-iiif"
   template_body = data.external.template_file.result.template
   parameters = {
     SourceBucket          = aws_s3_bucket.pyramid_tiff_bucket.id
     CacheDomainName       = join(",", var.aliases)
+    CachePolicyID         = aws_cloudfront_cache_policy.caching_with_variable_origin.id
     CacheSSLCertificate   = data.aws_acm_certificate.cache_certificate.arn
     CorsAllowCredentials  = "true"
     CorsAllowHeaders      = "authorization, cookie"

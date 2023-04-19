@@ -41,6 +41,7 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution_role" {
 
 locals {
   source_sha = sha1(join("", [for f in fileset("", "${path.module}/src/*"): sha1(file(f))]))
+  variable_sha = sha1(join("", [for v in [var.dc_api_endpoint, var.allow_from_referers, aws_s3_bucket.pyramid_tiff_bucket.id]: sha1(v)]))
 }
 
 resource "null_resource" "node_modules" {
@@ -49,9 +50,9 @@ resource "null_resource" "node_modules" {
   ]
 
   triggers = {
-    api_endpoint    = var.dc_api_endpoint
     node_modules    = fileexists("module/build/node_modules/.package-lock.json")
     source          = local.source_sha
+    vars            = local.variable_sha
   }
 
   provisioner "local-exec" {
@@ -77,7 +78,7 @@ data "archive_file" "trigger_lambda" {
   depends_on    = [null_resource.node_modules]
   type          = "zip"
   source_dir    = "${path.module}/build"
-  output_path   = "${path.module}/package/${local.source_sha}.zip"
+  output_path   = "${path.module}/package/${local.source_sha}${local.variable_sha}.zip"
 }
 
 resource "aws_lambda_function" "iiif_trigger" {
